@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Data Exposure Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .otp-section {
+            display: none;
+            margin-top: 20px;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <div id="alert" class="alert"></div>
+        
+        <div id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            <button onclick="login()">Login</button>
+            <button onclick="sendOTP()" style="background-color: #28a745">Login with OTP</button>
+            
+            <div class="links">
+                <a href="signup.html">Sign Up</a>
+                <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+            </div>
+        </div>
+
+        <div id="otpSection" class="otp-section">
+            <div class="form-group">
+                <label for="otp">Enter OTP</label>
+                <input type="text" id="otp" placeholder="Enter 6-digit OTP">
+            </div>
+            <button onclick="verifyOTP()">Verify OTP</button>
+            <button onclick="showLoginForm()" style="background-color: #6c757d">Back to Login</button>
+        </div>
+
+        <div id="forgotPasswordForm" style="display: none;">
+            <div class="form-group">
+                <label for="resetEmail">Email</label>
+                <input type="email" id="resetEmail" placeholder="Enter your email">
+            </div>
+            <button onclick="resetPassword()">Reset Password</button>
+            <button onclick="showLoginForm()" style="background-color: #6c757d">Back to Login</button>
+        </div>
+    </div>
+
+    <script>
+        // Demo user data (in a real app, this would be in a secure database)
+        const demoUsers = {
+            'demo@example.com': {
+                password: 'demo123',
+                name: 'Demo User'
+            }
+        };
+
+        // Store OTP (in a real app, this would be handled securely on the server)
+        let currentOTP = '';
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert alert-' + type;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Get stored users from localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+
+            // Check demo account or registered users
+            if ((users[email] && users[email].password === password) || 
+                (email === 'demo@example.com' && password === 'demo123')) {
+                
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userName', users[email]?.name || 'Demo User');
+                localStorage.setItem('userEmail', email);
+                
+                showAlert('Login successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
+                showAlert('Invalid email or password', 'error');
+            }
+        }
+
+        function sendOTP() {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                showAlert('Please enter your email', 'error');
+                return;
+            }
+
+            // Generate a random 6-digit OTP
+            currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // In a real app, this would be sent via email/SMS
+            showAlert('OTP sent! (Demo OTP: ' + currentOTP + ')', 'success');
+            
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('otpSection').style.display = 'block';
+        }
+
+        function verifyOTP() {
+            const enteredOTP = document.getElementById('otp').value;
+            if (enteredOTP === currentOTP) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userName', 'OTP User');
+                localStorage.setItem('userEmail', document.getElementById('email').value);
+                
+                showAlert('OTP verified! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
+                showAlert('Invalid OTP', 'error');
+            }
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('otpSection').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+        }
+
+        function resetPassword() {
+            const email = document.getElementById('resetEmail').value;
+            if (!email) {
+                showAlert('Please enter your email', 'error');
+                return;
+            }
+
+            // In a real app, this would send a reset link via email
+            showAlert('Password reset link sent to your email!', 'success');
+            setTimeout(showLoginForm, 2000);
+        }
+    </script>
+</body>
+</html>

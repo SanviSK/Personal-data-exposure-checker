@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Exposure Checker (Demo Version)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .input-group {
+            margin: 20px 0;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .details {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(255,255,255,0.7);
+            border-radius: 4px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+        .user-section {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .user-section button {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .user-section span {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-section">
+        <span>Welcome, <span id="userName">Guest</span>!</span>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <h1>Personal Data Exposure Checker (Demo Version)</h1>
+    
+    <div class="input-group">
+        <h2>Email Check</h2>
+        <input type="email" id="emailInput" placeholder="Enter your email address">
+        <button onclick="checkEmail()">Check Email</button>
+        <div id="emailResult" class="result"></div>
+    </div>
+
+    <div class="input-group">
+        <h2>Password Strength Check</h2>
+        <input type="password" id="passwordInput" placeholder="Enter a password" oninput="checkPasswordStrength()">
+        <button onclick="checkPassword()">Check Password</button>
+        <div id="strengthBar" class="progress-bar">
+            <div id="strengthProgress" class="progress" style="width: 0%"></div>
+        </div>
+        <div id="passwordResult" class="result"></div>
+    </div>
+
+    <script>
+        // Simulated database of common data breaches
+        const commonBreaches = {
+            'gmail.com': ['2020 Email Breach', '2022 Social Media Leak'],
+            'yahoo.com': ['2016 Major Breach', '2019 Data Leak'],
+            'hotmail.com': ['2018 Credential Stuffing', '2021 Forum Leak']
+        };
+
+        // Common password patterns to check
+        const commonPatterns = [
+            '123456', 'password', 'qwerty', 'admin', 
+            'letmein', 'welcome', 'monkey', 'dragon'
+        ];
+
+        function checkEmail() {
+            const email = document.getElementById('emailInput').value;
+            const resultDiv = document.getElementById('emailResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = 'Please enter an email address';
+                resultDiv.className = 'result warning';
+                return;
+            }
+
+            // Simulate checking process
+            resultDiv.innerHTML = 'Checking...';
+            
+            setTimeout(() => {
+                const domain = email.split('@')[1];
+                if (commonBreaches[domain]) {
+                    const breaches = commonBreaches[domain];
+                    let details = `<div class="details">
+                        <p>Found in the following breaches:</p>
+                        <ul>
+                            ${breaches.map(b => `<li>${b}</li>`).join('')}
+                        </ul>
+                        <p>Recommendations:</p>
+                        <ul>
+                            <li>Change your password immediately</li>
+                            <li>Enable two-factor authentication</li>
+                            <li>Check other accounts using this email</li>
+                        </ul>
+                    </div>`;
+                    
+                    resultDiv.innerHTML = `Warning: Your email domain was found in ${breaches.length} data breaches. ${details}`;
+                    resultDiv.className = 'result warning';
+                } else {
+                    resultDiv.innerHTML = 'Good news! Your email domain was not found in our simulated breach database. However, always practice good security:' +
+                        '<div class="details">' +
+                        '<ul>' +
+                        '<li>Use strong, unique passwords</li>' +
+                        '<li>Enable two-factor authentication when possible</li>' +
+                        '<li>Regularly monitor your accounts</li>' +
+                        '</ul></div>';
+                    resultDiv.className = 'result success';
+                }
+            }, 1000);
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('passwordInput').value;
+            const progress = document.getElementById('strengthProgress');
+            
+            // Calculate strength
+            let strength = 0;
+            if (password.length >= 8) strength += 20;
+            if (password.match(/[a-z]/)) strength += 20;
+            if (password.match(/[A-Z]/)) strength += 20;
+            if (password.match(/[0-9]/)) strength += 20;
+            if (password.match(/[^a-zA-Z0-9]/)) strength += 20;
+
+            // Update progress bar
+            progress.style.width = strength + '%';
+            if (strength <= 40) {
+                progress.style.backgroundColor = '#dc3545';
+            } else if (strength <= 80) {
+                progress.style.backgroundColor = '#ffc107';
+            } else {
+                progress.style.backgroundColor = '#28a745';
+            }
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const resultDiv = document.getElementById('passwordResult');
+            
+            if (!password) {
+                resultDiv.innerHTML = 'Please enter a password';
+                resultDiv.className = 'result warning';
+                return;
+            }
+
+            // Simulate checking process
+            resultDiv.innerHTML = 'Analyzing password...';
+            
+            setTimeout(() => {
+                let issues = [];
+                let recommendations = [];
+
+                // Check length
+                if (password.length < 8) {
+                    issues.push('Too short (less than 8 characters)');
+                    recommendations.push('Use at least 8 characters');
+                }
+
+                // Check for common patterns
+                if (commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
+                    issues.push('Contains common password patterns');
+                    recommendations.push('Avoid common words and patterns');
+                }
+
+                // Check character types
+                if (!password.match(/[A-Z]/)) {
+                    issues.push('No uppercase letters');
+                    recommendations.push('Add uppercase letters');
+                }
+                if (!password.match(/[0-9]/)) {
+                    issues.push('No numbers');
+                    recommendations.push('Add numbers');
+                }
+                if (!password.match(/[^a-zA-Z0-9]/)) {
+                    issues.push('No special characters');
+                    recommendations.push('Add special characters (!@#$%^&*)');
+                }
+
+                let message = '';
+                let className = '';
+
+                if (issues.length === 0) {
+                    message = `Strong password! Good practices detected:
+                        <div class="details">
+                            <ul>
+                                <li>Good length</li>
+                                <li>Mix of characters</li>
+                                <li>No common patterns</li>
+                            </ul>
+                        </div>`;
+                    className = 'success';
+                } else {
+                    message = `Password could be stronger. Issues found:
+                        <div class="details">
+                            <p>Issues:</p>
+                            <ul>${issues.map(issue => `<li>${issue}</li>`).join('')}</ul>
+                            <p>Recommendations:</p>
+                            <ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>
+                        </div>`;
+                    className = 'warning';
+                }
+
+                resultDiv.innerHTML = message;
+                resultDiv.className = 'result ' + className;
+            }, 800);
+        }
+
+        // Check login status
+        function checkLogin() {
+            // In a real app, this would verify with the server
+            if (!localStorage.getItem('isLoggedIn')) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('userName').textContent = localStorage.getItem('userName') || 'User';
+            }
+        }
+
+        function logout() {
+            // Clear only login status but keep user data
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userEmail');
+            window.location.href = 'login.html';
+        }
+
+        // Check login status when page loads
+        checkLogin();
+    </script>
+</body>
+</html>

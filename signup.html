@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Data Exposure Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .password-strength {
+            height: 5px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+        .password-strength-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sign Up</h1>
+        <div id="alert" class="alert"></div>
+
+        <div id="signupForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" oninput="checkPasswordStrength()">
+                <div class="password-strength">
+                    <div id="strengthBar" class="password-strength-bar"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password">
+            </div>
+            <button onclick="signup()">Sign Up</button>
+            <button onclick="sendVerificationOTP()" style="background-color: #007bff">Verify with OTP</button>
+
+            <div class="links">
+                Already have an account? <a href="login.html">Login</a>
+            </div>
+        </div>
+
+        <div id="otpSection" style="display: none;">
+            <div class="form-group">
+                <label for="otp">Enter OTP</label>
+                <input type="text" id="otp" placeholder="Enter 6-digit OTP">
+            </div>
+            <button onclick="verifyOTP()">Verify OTP</button>
+            <button onclick="showSignupForm()" style="background-color: #6c757d">Back to Sign Up</button>
+        </div>
+    </div>
+
+    <script>
+        let currentOTP = '';
+        let passwordStrength = 0;
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert alert-' + type;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthBar = document.getElementById('strengthBar');
+            
+            // Calculate strength
+            let strength = 0;
+            if (password.length >= 8) strength += 20;
+            if (password.match(/[a-z]/)) strength += 20;
+            if (password.match(/[A-Z]/)) strength += 20;
+            if (password.match(/[0-9]/)) strength += 20;
+            if (password.match(/[^a-zA-Z0-9]/)) strength += 20;
+
+            passwordStrength = strength;
+            strengthBar.style.width = strength + '%';
+            
+            if (strength <= 40) {
+                strengthBar.style.backgroundColor = '#dc3545';
+            } else if (strength <= 80) {
+                strengthBar.style.backgroundColor = '#ffc107';
+            } else {
+                strengthBar.style.backgroundColor = '#28a745';
+            }
+        }
+
+        function signup() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!name || !email || !password || !confirmPassword) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+
+            if (passwordStrength < 60) {
+                showAlert('Please choose a stronger password', 'error');
+                return;
+            }
+
+            // Store user data in localStorage (in a real app, this would go to a database)
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            
+            // Check if user already exists
+            if (users[email]) {
+                showAlert('An account with this email already exists', 'error');
+                return;
+            }
+
+            users[email] = {
+                name: name,
+                password: password
+            };
+            localStorage.setItem('users', JSON.stringify(users));
+
+            showAlert('Account created successfully! Redirecting to login...', 'success');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        }
+
+        function sendVerificationOTP() {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                showAlert('Please enter your email', 'error');
+                return;
+            }
+
+            // Generate a random 6-digit OTP
+            currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // In a real app, this would send the OTP via email
+            showAlert('OTP sent! (Demo OTP: ' + currentOTP + ')', 'success');
+            
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('otpSection').style.display = 'block';
+        }
+
+        function verifyOTP() {
+            const enteredOTP = document.getElementById('otp').value;
+            if (enteredOTP === currentOTP) {
+                showAlert('Email verified! You can now sign up.', 'success');
+                setTimeout(() => {
+                    showSignupForm();
+                }, 1500);
+            } else {
+                showAlert('Invalid OTP', 'error');
+            }
+        }
+
+        function showSignupForm() {
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('otpSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
